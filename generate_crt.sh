@@ -16,6 +16,8 @@ while [ -z "$CERT_PATH" ] || [ ! -d "$CERT_PATH" ]; do
 
     # 设置默认证书保存路径
     if [ -z "$CERT_PATH" ]; then
+        # 创建目录（如果不存在）
+        mkdir -p /root/cert
         CERT_PATH="/root/cert"
     fi
 
