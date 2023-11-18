@@ -1,4 +1,9 @@
 #!/bin/bash
+YELLOW="\033[33m"
+
+yellow(){
+    echo -e "\033[33m\033[01m$1\033[0m"
+}
 
 # 提示用户输入要签证的域名
 read -p "请输入要签证的域名 (例如: example.com): " DOMAIN_NAME
