@@ -33,6 +33,8 @@ openssl ecparam -genkey -name prime256v1 -out "$CERT_PATH/$DOMAIN_NAME.key"
 # 生成自签名证书（.crt 格式）
 openssl req -new -x509 -days 3650 -key "$CERT_PATH/$DOMAIN_NAME.key" -out "$CERT_PATH/$DOMAIN_NAME.crt" -subj "/CN=$DOMAIN_NAME"
 
-echo "SSL证书和私钥已生成并保存在 $CERT_PATH 目录下，文件名分别为 $DOMAIN_NAME.crt（证书）和 $DOMAIN_NAME.key（私钥）。"
+echo "SSL证书和私钥已生成并保存在 $CERT_PATH 目录下"
+yellow "证书 crt 文件路径如下: $CERT_PATH/$DOMAIN_NAME.crt"
+yellow "私钥 key 文件路径如下: $CERT_PATH/$DOMAIN_NAME.key"
 
 
