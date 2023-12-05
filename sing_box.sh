@@ -455,7 +455,7 @@ get_sing_box_version() {
     cat "$version_file"
 }
 
-function configure_sing_box_service() {
+configure_sing_box_service() {
     echo "Configuring sing-box startup service..."
     local service_file="/etc/systemd/system/sing-box.service"
 
