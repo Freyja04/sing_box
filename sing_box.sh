@@ -326,8 +326,7 @@ install_latest_sing_box() {
     if [ -n "$download_url" ]; then
         echo "Downloading Sing-Box..."
         wget -qO sing-box.tar.gz "$download_url" 2>&1 >/dev/null
-        tar -xzf sing-box.tar.gz -C /usr/local/bin
-        # tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
+        tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
         configure_sing_box_service
