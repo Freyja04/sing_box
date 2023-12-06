@@ -439,7 +439,7 @@ uninstall_sing_box() {
 }
 
 update_script() {
-    wget -O /root/singbox.sh https://raw.githubusercontent.com/TinrLin/script_installation/main/Install.sh
+    wget -O /root/singbox.sh https://raw.githubusercontent.com/sleeple2s/sing_box/main/sing_box.sh
     chmod +x /root/singbox.sh 
 }
 
@@ -484,26 +484,27 @@ WantedBy=multi-user.target'
 }
 
 menu() {
-  get_sing_box_version
-  echo "---------------------------------------------------------------"
-  echo -e " ${GREEN}1.${PLAIN} 安装/更新sing-box"
-  echo -e " ${GREEN}2.${PLAIN} acme申请证书"
-  echo -e " ${GREEN}3.${PLAIN} acme证书管理"
-  echo -e " ${GREEN}4.${PLAIN} 自签证书"
-  echo -e " ${RED}5. 卸载sing-box${PLAIN}"
-  echo -e " ${GREEN}6.${PLAIN} 更新脚本"
-  echo -e " ${GREEN}0.${PLAIN} 退出脚本"
-  echo "---------------------------------------------------------------"
-  read -rp "请输入选项 [0-6]: " menuInput
-  case "$menuInput" in
-    1 ) select_sing_box_install_option ;;
-    2 ) acme_cert_apply ;;
-    3 ) acme_cert_manage ;;
-    4 ) self_sign_cert ;;
-    5 ) uninstall_sing_box ;;
-    6 ) update_script ;;
-    * ) exit 0 ;;
-  esac
+    echo -e " ${YELLOW}脚本版本：V1${PLAIN}"
+    get_sing_box_version
+    echo "---------------------------------------------------------------"
+    echo -e " ${GREEN}1.${PLAIN} 安装/更新sing-box"
+    echo -e " ${GREEN}2.${PLAIN} acme申请证书"
+    echo -e " ${GREEN}3.${PLAIN} acme证书管理"
+    echo -e " ${GREEN}4.${PLAIN} 自签证书"
+    echo -e " ${RED}5. 卸载sing-box${PLAIN}"
+    echo -e " ${GREEN}6.${PLAIN} 更新脚本"
+    echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+    echo "---------------------------------------------------------------"
+    read -rp "请输入选项 [0-6]: " menuInput
+    case "$menuInput" in
+        1 ) select_sing_box_install_option ;;
+        2 ) acme_cert_apply ;;
+        3 ) acme_cert_manage ;;
+        4 ) self_sign_cert ;;
+        5 ) uninstall_sing_box ;;
+        6 ) update_script ;;
+        * ) exit 0 ;;
+    esac
 }
 
 menu
