@@ -289,7 +289,7 @@ switch_provider(){
 
 select_sing_box_install_option() {
     echo ""
-    echo "请选择 sing-box 的安装方式(默认1)："
+    echo "请选择 sing-box 的安装版本(默认1)："
     echo -e "${GREEN}1 ${NC} 下载安装 sing-box(Latest 版本)"
     echo -e "${GREEN}2 ${NC} 下载安装 sing-box(Beta 版本)"
     echo -e "${GREEN}0 ${NC} 退出 "
@@ -544,19 +544,35 @@ configure_sing_box_service() {
 }
 
 install_warp() {
-    wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+    local config_file="/etc/wireguard/warp.conf"
+    if [ -e "$config_file" ]; then
+        read -p "warp已安装,进入管理面板？ (y/n, 默认为 y): " choice
+        if [[ -z "$choice" || "$choice" == "y" || "$choice" == "Y" ]]; then
+            warp
+        else
+            exit 0
+        fi
+    else
+        read -p "warp未安装,现在安装？ (y/n, 默认为 y): " choic
+        if [[ -z "$choic" || "$choic" == "y" || "$choic" == "Y" ]]; then
+            wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+        else
+            exit 0
+        fi
+    fi
+
 }
 
 menu() {
     echo ""
-    echo -e "${YELLOW}script-version v1.4${NC}"
+    echo -e "${YELLOW}script-version v1.5${NC}"
     show_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
     echo -e "${GREEN}2 ${NC} acme申请证书"
     echo -e "${GREEN}3 ${NC} acme证书管理"
     echo -e "${GREEN}4 ${NC} 自签证书"
-    echo -e "${GREEN}5 ${NC} 安装warp"
+    echo -e "${GREEN}5 ${NC} 安装/管理warp"
     echo -e "${GREEN}6 ${NC} 更新脚本"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
