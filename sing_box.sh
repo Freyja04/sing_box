@@ -543,6 +543,10 @@ configure_sing_box_service() {
     echo "sing-box startup service has been configured"
 }
 
+install_warp() {
+    wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+}
+
 menu() {
     echo ""
     echo -e "${YELLOW}script-version v1.4${NC}"
@@ -552,11 +556,12 @@ menu() {
     echo -e "${GREEN}2 ${NC} acme申请证书"
     echo -e "${GREEN}3 ${NC} acme证书管理"
     echo -e "${GREEN}4 ${NC} 自签证书"
-    echo -e "${RED}5  卸载sing-box${NC}"
+    echo -e "${GREEN}5 ${NC} 安装warp"
     echo -e "${GREEN}6 ${NC} 更新脚本"
+    echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
     echo "---------------------------------------------------------------"
-    read -rp "请输入选项 [0-6]: " menuInput
+    read -rp "请输入选项: " menuInput
     case "$menuInput" in
         1)
             select_sing_box_install_option
@@ -575,11 +580,15 @@ menu() {
             exit 0
             ;;
         5)
-            uninstall_sing_box
+            install_warp
             exit 0
             ;;
         6)
             update_script
+            exit 0
+            ;;
+        10)
+            uninstall_sing_box
             exit 0
             ;;
         0)
