@@ -486,7 +486,7 @@ configure_sing_box_service() {
 }
 
 menu() {
-    echo -e "${YELLOW}script-version v1${PLAIN}"
+    echo -e "${YELLOW}script-version v1.1${PLAIN}"
     get_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e " ${GREEN}1.${PLAIN} 安装/更新sing-box"
