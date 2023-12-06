@@ -79,17 +79,21 @@ install_acme(){
         green "acme.sh 证书一键申请脚本安装成功!"
     else
         red "抱歉, acme.sh 证书一键申请脚本安装失败"
-        green "建议如下："
         yellow "1. 检查 VPS 的网络环境"
-        yellow "2. 脚本可能跟不上时代, 建议截图发布到 GitHub Issues 询问"
     fi
 }
 
 uninstall_acme() {
-    ~/.acme.sh/acme.sh --uninstall
-    sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
-    rm -rf ~/.acme.sh
-    green "acme.sh 证书一键申请脚本已彻底卸载!"
+    read -p "确定要删除 acme.sh 吗？(y/n,默认n) " answer
+
+    if [ "$answer" == "y" ]; then
+        ~/.acme.sh/acme.sh --uninstall
+        sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
+        rm -rf ~/.acme.sh
+        green "acme.sh 证书一键申请脚本已彻底卸载!"
+    else
+        echo "取消卸载操作."
+    fi
 }
 
 check_80(){
@@ -225,10 +229,6 @@ acme_standalone(){
     
     bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file /usr/local/etc/acme/$domain.key --fullchain-file /usr/local/etc/acme/$domain.crt --ecc
     checktls
-}
-
-check_cert(){
-    bash ~/.acme.sh/acme.sh --list
 }
 
 revoke_cert() {
@@ -386,18 +386,16 @@ create_sing_box_folder() {
 
 acme_cert_manage() {
     [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]] && yellow "未安装acme.sh" && exit 1
-    echo -e " ${GREEN}1.${PLAIN} 查看已申请的证书"
-    echo -e " ${GREEN}2.${PLAIN} 撤销并删除已申请的证书"
-    echo -e " ${GREEN}3.${PLAIN} 手动续期已申请的证书"
-    echo -e " ${GREEN}4.${PLAIN} 切换证书颁发机构"
-    echo -e " ${RED}5. 卸载acme.sh${PLAIN}"
-    read -rp "请输入选项 [1-5]: " choice
+    echo -e " ${GREEN}1.${PLAIN} 查看/撤销/删除已申请的证书"
+    echo -e " ${GREEN}2.${PLAIN} 手动续期已申请的证书"
+    echo -e " ${GREEN}3.${PLAIN} 切换证书颁发机构"
+    echo -e " ${RED}4. 卸载acme.sh${PLAIN}"
+    read -rp "请输入选项 [1-4]: " choice
     case "$choice" in
-        1 ) check_cert ;;
-        2 ) revoke_cert ;;
-        3 ) renew_cert ;;
-        4 ) switch_provider ;;
-        5 ) uninstall_acme ;;
+        1 ) revoke_cert ;;
+        2 ) renew_cert ;;
+        3 ) switch_provider ;;
+        4 ) uninstall_acme ;;
         * ) echo -e "${RED}无效的选择，请重新输入！${PLAIN}" ;;
     esac
 }
@@ -422,20 +420,24 @@ self_sign_cert() {
     openssl ecparam -genkey -name prime256v1 -out "$CERT_PATH/$DOMAIN_NAME.key"
     openssl req -new -x509 -days 3650 -key "$CERT_PATH/$DOMAIN_NAME.key" -out "$CERT_PATH/$DOMAIN_NAME.crt" -subj "/CN=$DOMAIN_NAME"
 
-    echo "SSL证书和私钥已生成并保存在 $CERT_PATH 目录下"
-    yellow "crt文件路径如下: $CERT_PATH/$DOMAIN_NAME.crt"
-    yellow "key文件路径如下: $CERT_PATH/$DOMAIN_NAME.key"
+    echo "SSL证书和私钥已生成!"
+    yellow "crt文件路径: $CERT_PATH/$DOMAIN_NAME.crt"
+    yellow "key文件路径: $CERT_PATH/$DOMAIN_NAME.key"
 }
 
 uninstall_sing_box() {
-    echo "开始卸载 sing-box..."
-    systemctl stop sing-box
-    systemctl disable sing-box
-    rm -rf /usr/local/bin/sing-box
-    rm -rf /usr/local/etc/sing-box
-    rm -rf /etc/systemd/system/sing-box.service
-    systemctl daemon-reload
-    echo "sing-box 卸载完成。"
+    read -p "确定要删除 sing-box 吗？(y/n,默认n) " answer
+    if [ "$answer" == "y" ]; then
+        echo "开始卸载 sing-box..."
+        systemctl disable sing-box
+        rm -rf /usr/local/bin/sing-box
+        rm -rf /usr/local/etc/sing-box
+        rm -rf /etc/systemd/system/sing-box.service
+        systemctl daemon-reload
+        echo "sing-box 卸载完成。"
+    else
+        echo "取消卸载操作."
+    fi
 }
 
 update_script() {
@@ -463,28 +465,28 @@ configure_sing_box_service() {
     fi
     
     local service_config='[Unit]
-Description=sing-box service
-Documentation=https://sing-box.sagernet.org
-After=network.target nss-lookup.target
+    Description=sing-box service
+    Documentation=https://sing-box.sagernet.org
+    After=network.target nss-lookup.target
 
-[Service]
-CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
-AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
-ExecStart=/usr/local/bin/sing-box run -c /usr/local/etc/sing-box/config.json
-ExecReload=/bin/kill -HUP $MAINPID
-Restart=on-failure
-RestartSec=10s
-LimitNOFILE=infinity
+    [Service]
+    CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+    AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+    ExecStart=/usr/local/bin/sing-box run -c /usr/local/etc/sing-box/config.json
+    ExecReload=/bin/kill -HUP $MAINPID
+    Restart=on-failure
+    RestartSec=10s
+    LimitNOFILE=infinity
 
-[Install]
-WantedBy=multi-user.target'
+    [Install]
+    WantedBy=multi-user.target'
 
     echo "$service_config" >"$service_file"
     echo "sing-box startup service has been configured."
 }
 
 menu() {
-    echo -e " ${YELLOW}脚本版本：V1${PLAIN}"
+    echo -e "${YELLOW}script-version v1${PLAIN}"
     get_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e " ${GREEN}1.${PLAIN} 安装/更新sing-box"
