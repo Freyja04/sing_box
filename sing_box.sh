@@ -3,7 +3,7 @@
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
-PLAIN='\033[0m'
+NC='\033[0m'
 
 red(){
     echo -e "\033[31m\033[01m$1\033[0m"
@@ -111,9 +111,9 @@ check_80(){
         green "检测到目前 80 端口未被占用"
         sleep 1
     else
-        red "检测到目前 80 端口被其他程序被占用，以下为占用程序信息"
+        red "检测到目前 80 端口被其他程序被占用,以下为占用程序信息"
         lsof -i:"80"
-        read -rp "如需结束占用进程请按Y，按其他键则退出 [Y/N]: " yn
+        read -rp "如需结束占用进程请按Y,按其他键则退出 [Y/N]: " yn
         if [[ $yn =~ "Y"|"y" ]]; then
             lsof -i:"80" | awk '{print $2}' | grep -v "PID" | xargs kill -9
             sleep 1
@@ -178,17 +178,17 @@ acme_standalone(){
     yellow "在使用80端口申请模式时, 请先将您的域名解析至你的VPS的真实IP地址, 否则会导致证书申请失败"
     echo ""
     if [[ -n $ipv4 && -n $ipv6 ]]; then
-        echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${PLAIN}"
-        echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${PLAIN}"
+        echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${NC}"
+        echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${NC}"
     elif [[ -n $ipv4 && -z $ipv6 ]]; then
-        echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${PLAIN}"
+        echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${NC}"
     elif [[ -z $ipv4 && -n $ipv6 ]]; then
-        echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${PLAIN}"
+        echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${NC}"
     fi
     echo ""
 
     read -rp "请输入解析完成的域名: " domain
-    [[ -z $domain ]] && red "未输入域名，无法执行操作！" && exit 1
+    [[ -z $domain ]] && red "未输入域名,无法执行操作！" && exit 1
     green "已输入的域名：$domain" && sleep 1
 
     domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
@@ -234,7 +234,7 @@ acme_standalone(){
 revoke_cert() {
     bash ~/.acme.sh/acme.sh --list
     read -rp "请输入要撤销的域名证书 (复制 Main_Domain 下显示的域名): " domain
-    [[ -z $domain ]] && red "未输入域名，无法执行操作!" && exit 1
+    [[ -z $domain ]] && red "未输入域名,无法执行操作!" && exit 1
 
     if [[ -n $(bash ~/.acme.sh/acme.sh --list | grep $domain) ]]; then
         bash ~/.acme.sh/acme.sh --revoke -d ${domain} --ecc
@@ -254,45 +254,59 @@ renew_cert() {
 }
 
 switch_provider(){
-    yellow "请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书 "
+    yellow "请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书. "
     yellow "如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请."
-    echo -e " ${GREEN}1.${PLAIN} Letsencrypt.org ${YELLOW}(默认)${PLAIN}"
-    echo -e " ${GREEN}2.${PLAIN} BuyPass.com"
-    echo -e " ${GREEN}3.${PLAIN} ZeroSSL.com"
-    read -rp "请选择证书提供商 [1-3]: " provider
+    echo -e " ${GREEN}1.${NC} Letsencrypt.org ${YELLOW}(默认)${NC}"
+    echo -e " ${GREEN}2.${NC} BuyPass.com"
+    echo -e " ${GREEN}3.${NC} ZeroSSL.com"
+
+    local provider
+    read -p "请选择证书提供商 [1-3]: " provider
     case $provider in
-        2) bash ~/.acme.sh/acme.sh --set-default-ca --server buypass && green "切换证书提供商为 BuyPass.com 成功！" ;;
-        3) bash ~/.acme.sh/acme.sh --set-default-ca --server zerossl && green "切换证书提供商为 ZeroSSL.com 成功！" ;;
-        *) bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && green "切换证书提供商为 Letsencrypt.org 成功！" ;;
+        1)
+            bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && green "切换证书提供商为 Letsencrypt.org 成功！"
+            break
+            ;;
+        2)
+            bash ~/.acme.sh/acme.sh --set-default-ca --server buypass && green "切换证书提供商为 BuyPass.com 成功！"
+            break
+            ;;
+        3)
+            bash ~/.acme.sh/acme.sh --set-default-ca --server zerossl && green "切换证书提供商为 ZeroSSL.com 成功！"
+            break
+            ;;
+        *)
+            echo -e "${RED}无效的选择，请重新输入。${NC}"
+            switch_provider
+            ;;
     esac
 }
 
 select_sing_box_install_option() {
     create_sing_box_folder
 
-    while true; do
-        echo "请选择 sing-box 的安装方式（默认1）："
-        echo "1). 下载安装 sing-box（Latest 版本）"
-        echo "2). 下载安装 sing-box（Beta 版本）"
+    echo "请选择 sing-box 的安装方式（默认1）："
+    echo "1). 下载安装 sing-box（Latest 版本）"
+    echo "2). 下载安装 sing-box（Beta 版本）"
 
-        local install_option
-        read -p "请选择 [1-2]: " install_option
-        install_option="${install_option:-1}"
+    local install_option
+    read -p "请选择 [1-2]: " install_option
+    install_option="${install_option:-1}"
 
-        case $install_option in
-            1)
-                install_latest_sing_box
-                break
-                ;;
-            2)
-                install_Pre_release_sing_box
-                break
-                ;;                
-            *)
-                echo -e "${RED}无效的选择，请重新输入！${NC}"
-                ;;
-        esac
-    done
+    case $install_option in
+        1)
+            install_latest_sing_box
+            break
+            ;;
+        2)
+            install_Pre_release_sing_box
+            break
+            ;;                
+        *)
+            echo -e "${RED}无效的选择,请重新输入！${NC}"
+            select_sing_box_install_option
+            ;;
+    esac
 }
 
 install_latest_sing_box() {
@@ -304,18 +318,23 @@ install_latest_sing_box() {
     case $arch in
         x86_64|amd64)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-amd64.tar.gz")
+            break
             ;;
         armv7l)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-armv7.tar.gz")
+            break
             ;;
         aarch64|arm64)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-arm64.tar.gz")
+            break
             ;;
         amd64v3)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-amd64v3.tar.gz")
+            break
             ;;
         s390x)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-s390x.tar.gz")
+            break
             ;;            
         *)
             echo -e "${RED}不支持的架构：$arch${NC}"
@@ -345,18 +364,23 @@ install_Pre_release_sing_box() {
     case $arch in
         x86_64|amd64)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-amd64.tar.gz")) | .browser_download_url' | head -n 1)
+            break
             ;;
         armv7l)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-armv7.tar.gz")) | .browser_download_url' | head -n 1)
+            break
             ;;
         aarch64|arm64)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-arm64.tar.gz")) | .browser_download_url' | head -n 1)
+            break
             ;;
         amd64v3)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-amd64v3.tar.gz")) | .browser_download_url' | head -n 1)
+            break
             ;;
         s390x)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-s390x.tar.gz")) | .browser_download_url' | head -n 1)
+            break
             ;;            
         *)
             echo -e "${RED}不支持的架构：$arch${NC}"
@@ -386,35 +410,52 @@ create_sing_box_folder() {
 
 acme_cert_manage() {
     [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]] && yellow "未安装acme.sh" && exit 1
-    echo -e " ${GREEN}1.${PLAIN} 查看/撤销/删除已申请的证书"
-    echo -e " ${GREEN}2.${PLAIN} 手动续期已申请的证书"
-    echo -e " ${GREEN}3.${PLAIN} 切换证书颁发机构"
-    echo -e " ${RED}4. 卸载acme.sh${PLAIN}"
-    read -rp "请输入选项 [1-4]: " choice
+    echo -e " ${GREEN}1.${NC} 查看/撤销/删除已申请的证书"
+    echo -e " ${GREEN}2.${NC} 手动续期已申请的证书"
+    echo -e " ${GREEN}3.${NC} 切换证书颁发机构"
+    echo -e " ${RED}4. 卸载acme.sh${NC}"
+
+    local choice
+    read -p "请输入选项 [1-4]: " choice
     case "$choice" in
-        1 ) revoke_cert ;;
-        2 ) renew_cert ;;
-        3 ) switch_provider ;;
-        4 ) uninstall_acme ;;
-        * ) echo -e "${RED}无效的选择，请重新输入！${PLAIN}" ;;
+        1)
+            revoke_cert
+            break
+            ;;
+        2)
+            renew_cert
+            break
+            ;;
+        3)
+            switch_provider
+            break
+            ;;
+        4)
+            uninstall_acme
+            break
+            ;;
+        *)
+            echo -e "${RED}无效的选择,请重新输入！${NC}"
+            acme_cert_manage
+            ;;
     esac
 }
 
 self_sign_cert() {
     read -p "请输入要签证的域名 (例如: example.com): " DOMAIN_NAME
     if [ -z "$DOMAIN_NAME" ]; then
-        echo "错误：域名不能为空。"
+        echo "错误：域名不能为空."
         exit 1
     fi
     CERT_PATH=""
     while [ -z "$CERT_PATH" ] || [ ! -d "$CERT_PATH" ]; do
-        read -p "请输入证书保存路径（必须为已存在的目录，按回车键确认，默认路径为 /usr/local/etc/cert）: " CERT_PATH
+        read -p "请输入证书保存路径（必须为已存在的目录,按回车键确认,默认路径为 /usr/local/etc/cert）: " CERT_PATH
         if [ -z "$CERT_PATH" ]; then
             mkdir -p /usr/local/etc/cert
             CERT_PATH="/usr/local/etc/cert"
         fi
         if [ ! -d "$CERT_PATH" ]; then
-            echo "错误：指定的路径 '$CERT_PATH' 不存在，请重新输入。"
+            echo "错误：指定的路径 '$CERT_PATH' 不存在,请重新输入."
         fi
     done
     openssl ecparam -genkey -name prime256v1 -out "$CERT_PATH/$DOMAIN_NAME.key"
@@ -434,7 +475,7 @@ uninstall_sing_box() {
         rm -rf /usr/local/etc/sing-box
         rm -rf /etc/systemd/system/sing-box.service
         systemctl daemon-reload
-        echo "sing-box 卸载完成。"
+        echo "sing-box 卸载完成."
     else
         echo "取消卸载操作."
     fi
@@ -486,26 +527,47 @@ configure_sing_box_service() {
 }
 
 menu() {
-    echo -e "${YELLOW}script-version v1.1${PLAIN}"
+    echo -e "${YELLOW}script-version v1.2${NC}"
     get_sing_box_version
     echo "---------------------------------------------------------------"
-    echo -e " ${GREEN}1.${PLAIN} 安装/更新sing-box"
-    echo -e " ${GREEN}2.${PLAIN} acme申请证书"
-    echo -e " ${GREEN}3.${PLAIN} acme证书管理"
-    echo -e " ${GREEN}4.${PLAIN} 自签证书"
-    echo -e " ${RED}5. 卸载sing-box${PLAIN}"
-    echo -e " ${GREEN}6.${PLAIN} 更新脚本"
-    echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+    echo -e " ${GREEN}1.${NC} 安装/更新sing-box"
+    echo -e " ${GREEN}2.${NC} acme申请证书"
+    echo -e " ${GREEN}3.${NC} acme证书管理"
+    echo -e " ${GREEN}4.${NC} 自签证书"
+    echo -e " ${RED}5. 卸载sing-box${NC}"
+    echo -e " ${GREEN}6.${NC} 更新脚本"
+    echo -e " ${GREEN}0.${NC} 退出脚本"
     echo "---------------------------------------------------------------"
     read -rp "请输入选项 [0-6]: " menuInput
     case "$menuInput" in
-        1 ) select_sing_box_install_option ;;
-        2 ) acme_cert_apply ;;
-        3 ) acme_cert_manage ;;
-        4 ) self_sign_cert ;;
-        5 ) uninstall_sing_box ;;
-        6 ) update_script ;;
-        * ) exit 0 ;;
+        1)
+            select_sing_box_install_option
+            exit 0
+            ;;
+        2)
+            acme_cert_apply
+            exit 0
+            ;;
+        3)
+            acme_cert_manage
+            exit 0
+            ;;
+        4)
+            self_sign_cert
+            exit 0
+            ;;
+        5)
+            uninstall_sing_box
+            exit 0
+            ;;
+        6)
+            update_script
+            exit 0
+            ;;
+        *) 
+            echo -e "${RED}无效的选择,请重新输入.${NC}"
+            menu
+            ;;
     esac
 }
 
