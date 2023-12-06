@@ -546,7 +546,7 @@ configure_sing_box_service() {
 install_warp() {
     local config_file="/etc/wireguard/warp.conf"
     if [ -e "$config_file" ]; then
-        read -p "warp已安装,进入管理面板？ (y/n, 默认为 y): " choice
+        read -p "warp已安装在 $config_file ,进入管理面板？ (y/n, 默认为 y): " choice
         if [[ -z "$choice" || "$choice" == "y" || "$choice" == "Y" ]]; then
             warp
         else
@@ -556,6 +556,7 @@ install_warp() {
         read -p "warp未安装,现在安装？ (y/n, 默认为 y): " choic
         if [[ -z "$choic" || "$choic" == "y" || "$choic" == "Y" ]]; then
             wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+            echo "warp已安装在 $config_file"
         else
             exit 0
         fi
