@@ -254,6 +254,7 @@ renew_cert() {
 }
 
 switch_provider(){
+    echo ""
     yellow "请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书"
     yellow "如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请"
     echo -e "${GREEN}1 ${NC} Letsencrypt.org ${YELLOW}(默认)${NC} "
@@ -287,6 +288,7 @@ switch_provider(){
 }
 
 select_sing_box_install_option() {
+    echo ""
     echo "请选择 sing-box 的安装方式(默认1)："
     echo -e "${GREEN}1 ${NC} 下载安装 sing-box(Latest 版本)"
     echo -e "${GREEN}2 ${NC} 下载安装 sing-box(Beta 版本)"
@@ -416,6 +418,7 @@ check_install_type() {
 
 acme_cert_manage() {
     [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]] && yellow "未安装acme.sh" && exit 1
+    echo ""
     echo -e "${GREEN}1 ${NC} 查看/撤销/删除已申请的证书"
     echo -e "${GREEN}2 ${NC} 手动续期已申请的证书"
     echo -e "${GREEN}3 ${NC} 切换证书颁发机构"
@@ -541,6 +544,7 @@ configure_sing_box_service() {
 }
 
 menu() {
+    echo ""
     echo -e "${YELLOW}script-version v1.4${NC}"
     show_sing_box_version
     echo "---------------------------------------------------------------"
