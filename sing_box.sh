@@ -283,7 +283,7 @@ switch_provider(){
 }
 
 select_sing_box_install_option() {
-    create_sing_box_folder
+    # create_sing_box_folder
 
     echo "请选择 sing-box 的安装方式（默认1）："
     echo "1). 下载安装 sing-box（Latest 版本）"
@@ -343,7 +343,7 @@ install_latest_sing_box() {
         tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
-        configure_sing_box_service
+        check_install_type
         echo "Sing-Box installed successfully."
     else
         echo -e "${RED}Unable to retrieve the download URL for Sing-Box.${NC}"
@@ -384,7 +384,7 @@ install_Pre_release_sing_box() {
         tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
-        configure_sing_box_service
+        check_install_type
         echo "Sing-Box installed successfully."
     else
         echo -e "${RED}Unable to get pre-release download link for Sing-Box.${NC}"
@@ -392,10 +392,20 @@ install_Pre_release_sing_box() {
     fi
 }
 
-create_sing_box_folder() {
+check_install_type() {
     local folder="/usr/local/etc/sing-box"
-    [[ ! -d "$folder" ]] && mkdir -p "$folder"
-    [[ ! -f "$folder/config.json" ]] && touch "$folder/config.json"
+    if [ -d "$folder" ]; then
+        rm "/usr/local/etc/sing-box/version.txt"
+        systemctl daemon-reload   
+        systemctl enable sing-box
+        systemctl start sing-box
+        systemctl restart sing-box
+    else
+        mkdir -p "$folder" && touch "$folder/config.json"
+        configure_sing_box_service
+        systemctl daemon-reload   
+        systemctl enable sing-box
+    fi
 }
 
 acme_cert_manage() {
@@ -477,15 +487,18 @@ update_script() {
     chmod +x /root/singbox.sh 
 }
 
-get_sing_box_version() {
-    local folder="/usr/local/etc/sing-box"
-    local version_file="$folder/version.txt"
-    [[ ! -d "$folder" ]] && mkdir -p "$folder"
-    if [[ ! -f "$version_file" ]]; then
+show_sing_box_version() {
+    local version_file="/usr/local/etc/sing-box/version.txt"
+    local sing_box_status=$(systemctl is-active "sing-box")
+    if [ -e "$version_file" ]; then
+        cat "$version_file"
+    elif [ "$sing_box_status" = "active" ]; then
         sing-box version > "$version_file"
+        sed -i '1s/.*/'"$(yellow "$(head -n 1 "$version_file")")"'/g' "$version_file"
+        cat "$version_file"
+    else 
+        exit 0
     fi
-    sed -i '1s/.*/'"$(yellow "$(head -n 1 "$version_file")")"'/g' "$version_file"
-    cat "$version_file"
 }
 
 configure_sing_box_service() {
@@ -518,8 +531,8 @@ configure_sing_box_service() {
 }
 
 menu() {
-    echo -e "${YELLOW}script-version v1.3${NC}"
-    get_sing_box_version
+    echo -e "${YELLOW}script-version v1.4${NC}"
+    show_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e " ${GREEN}1.${NC} 安装/更新sing-box"
     echo -e " ${GREEN}2.${NC} acme申请证书"
