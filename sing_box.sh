@@ -324,15 +324,12 @@ install_latest_sing_box() {
             ;;
         aarch64|arm64)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-arm64.tar.gz")
-            break
             ;;
         amd64v3)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-amd64v3.tar.gz")
-            break
             ;;
         s390x)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-s390x.tar.gz")
-            break
             ;;            
         *)
             echo -e "${RED}不支持的架构：$arch${NC}"
