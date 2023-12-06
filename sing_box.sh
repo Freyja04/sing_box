@@ -570,10 +570,10 @@ menu() {
     show_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
-    echo -e "${GREEN}2 ${NC} acme申请证书"
-    echo -e "${GREEN}3 ${NC} acme证书管理"
-    echo -e "${GREEN}4 ${NC} 自签证书"
-    echo -e "${GREEN}5 ${NC} 安装/管理warp"
+    echo -e "${GREEN}2 ${NC} 安装/管理warp"
+    echo -e "${GREEN}3 ${NC} acme证书申请"
+    echo -e "${GREEN}4 ${NC} acme证书管理"
+    echo -e "${GREEN}5 ${NC} 自签证书"
     echo -e "${GREEN}6 ${NC} 更新脚本"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
@@ -585,21 +585,22 @@ menu() {
             exit 0
             ;;
         2)
-            acme_cert_apply
-            exit 0
-            ;;
-        3)
-            acme_cert_manage
-            exit 0
-            ;;
-        4)
-            self_sign_cert
-            exit 0
-            ;;
-        5)
             install_warp
             exit 0
             ;;
+        3)
+            acme_cert_apply
+            exit 0
+            ;;
+        4)
+            acme_cert_manage
+            exit 0
+            ;;
+        5)
+            self_sign_cert
+            exit 0
+            ;;
+
         6)
             update_script
             exit 0
