@@ -92,7 +92,7 @@ uninstall_acme() {
         rm -rf ~/.acme.sh
         green "acme.sh 证书一键申请脚本已彻底卸载!"
     else
-        echo "取消卸载操作."
+        echo "取消卸载操作"
     fi
 }
 
@@ -254,8 +254,8 @@ renew_cert() {
 }
 
 switch_provider(){
-    yellow "请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书. "
-    yellow "如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请."
+    yellow "请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书"
+    yellow "如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请"
     echo -e " ${GREEN}1.${NC} Letsencrypt.org ${YELLOW}(默认)${NC}"
     echo -e " ${GREEN}2.${NC} BuyPass.com"
     echo -e " ${GREEN}3.${NC} ZeroSSL.com"
@@ -276,18 +276,16 @@ switch_provider(){
             exit 0
             ;;
         *)
-            echo -e "${RED}无效的选择，请重新输入。${NC}"
+            echo -e "${RED}无效的选择,请重新输入${NC}"
             switch_provider
             ;;
     esac
 }
 
 select_sing_box_install_option() {
-    # create_sing_box_folder
-
-    echo "请选择 sing-box 的安装方式（默认1）："
-    echo "1). 下载安装 sing-box（Latest 版本）"
-    echo "2). 下载安装 sing-box（Beta 版本）"
+    echo "请选择 sing-box 的安装方式(默认1)："
+    echo "1). 下载安装 sing-box(Latest 版本)"
+    echo "2). 下载安装 sing-box(Beta 版本)"
 
     local install_option
     read -p "请选择 [1-2]: " install_option
@@ -344,9 +342,9 @@ install_latest_sing_box() {
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
         check_install_type
-        echo "Sing-Box installed successfully."
+        echo "Sing-Box installed successfully"
     else
-        echo -e "${RED}Unable to retrieve the download URL for Sing-Box.${NC}"
+        echo -e "${RED}Unable to retrieve the download URL for Sing-Box${NC}"
         return 1
     fi
 }
@@ -385,9 +383,9 @@ install_Pre_release_sing_box() {
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
         check_install_type
-        echo "Sing-Box installed successfully."
+        echo "Sing-Box installed successfully"
     else
-        echo -e "${RED}Unable to get pre-release download link for Sing-Box.${NC}"
+        echo -e "${RED}Unable to get pre-release download link for Sing-Box${NC}"
         return 1
     fi
 }
@@ -444,18 +442,18 @@ acme_cert_manage() {
 self_sign_cert() {
     read -p "请输入要签证的域名 (例如: example.com): " DOMAIN_NAME
     if [ -z "$DOMAIN_NAME" ]; then
-        echo "错误：域名不能为空."
+        echo "错误：域名不能为空"
         exit 1
     fi
     CERT_PATH=""
     while [ -z "$CERT_PATH" ] || [ ! -d "$CERT_PATH" ]; do
-        read -p "请输入证书保存路径（必须为已存在的目录,按回车键确认,默认路径为 /usr/local/etc/cert）: " CERT_PATH
+        read -p "请输入证书保存路径(必须为已存在的目录,按回车键确认,默认路径为 /usr/local/etc/cert): " CERT_PATH
         if [ -z "$CERT_PATH" ]; then
             mkdir -p /usr/local/etc/cert
             CERT_PATH="/usr/local/etc/cert"
         fi
         if [ ! -d "$CERT_PATH" ]; then
-            echo "错误：指定的路径 '$CERT_PATH' 不存在,请重新输入."
+            echo "错误：指定的路径 '$CERT_PATH' 不存在,请重新输入"
         fi
     done
     openssl ecparam -genkey -name prime256v1 -out "$CERT_PATH/$DOMAIN_NAME.key"
@@ -476,9 +474,9 @@ uninstall_sing_box() {
         rm -rf /usr/local/etc/sing-box
         rm -rf /etc/systemd/system/sing-box.service
         systemctl daemon-reload
-        echo "sing-box 卸载完成."
+        echo "sing-box 卸载完成"
     else
-        echo "取消卸载操作."
+        echo "取消卸载操作"
     fi
 }
 
@@ -527,7 +525,7 @@ configure_sing_box_service() {
     WantedBy=multi-user.target'
 
     echo "$service_config" >"$service_file"
-    echo "sing-box startup service has been configured."
+    echo "sing-box startup service has been configured"
 }
 
 menu() {
@@ -572,7 +570,7 @@ menu() {
             exit 0
             ;;
         *) 
-            echo -e "${RED}无效的选择,请重新输入.${NC}"
+            echo -e "${RED}无效的选择,请重新输入${NC}"
             menu
             ;;
     esac
