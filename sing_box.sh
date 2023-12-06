@@ -85,7 +85,7 @@ install_acme(){
 
 uninstall_acme() {
     read -p "确定要删除 acme.sh 吗？(y/n,默认n) " answer
-
+    answer="${answer:-n}"
     if [ "$answer" == "y" ]; then
         ~/.acme.sh/acme.sh --uninstall
         sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
@@ -468,6 +468,7 @@ self_sign_cert() {
 
 uninstall_sing_box() {
     read -p "确定要删除 sing-box 吗？(y/n,默认n) " answer
+    answer="${answer:-n}"
     if [ "$answer" == "y" ]; then
         echo "开始卸载 sing-box..."
         systemctl disable sing-box
@@ -527,7 +528,7 @@ configure_sing_box_service() {
 }
 
 menu() {
-    echo -e "${YELLOW}script-version v1.2${NC}"
+    echo -e "${YELLOW}script-version v1.3${NC}"
     get_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e " ${GREEN}1.${NC} 安装/更新sing-box"
@@ -540,6 +541,9 @@ menu() {
     echo "---------------------------------------------------------------"
     read -rp "请输入选项 [0-6]: " menuInput
     case "$menuInput" in
+        0)
+            exit 0
+            ;;
         1)
             select_sing_box_install_option
             exit 0
