@@ -256,12 +256,12 @@ renew_cert() {
 switch_provider(){
     yellow "请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书"
     yellow "如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请"
-    echo -e " ${GREEN}1.${NC} Letsencrypt.org ${YELLOW}(默认)${NC}"
-    echo -e " ${GREEN}2.${NC} BuyPass.com"
-    echo -e " ${GREEN}3.${NC} ZeroSSL.com"
-
+    echo -e "${GREEN}1)${NC} Letsencrypt.org ${YELLOW}(默认)${NC}"
+    echo -e "${GREEN}2)${NC} BuyPass.com"
+    echo -e "${GREEN}3)${NC} ZeroSSL.com"
+    echo -e "${GREEN}0)${NC} 退出"
     local provider
-    read -p "请选择证书提供商 [1-3]: " provider
+    read -p "请选择证书提供商 [0-3]: " provider
     case $provider in
         1)
             bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && green "切换证书提供商为 Letsencrypt.org 成功！"
@@ -275,6 +275,10 @@ switch_provider(){
             bash ~/.acme.sh/acme.sh --set-default-ca --server zerossl && green "切换证书提供商为 ZeroSSL.com 成功！"
             exit 0
             ;;
+        0)
+            menu
+            exit 0
+            ;;
         *)
             echo -e "${RED}无效的选择,请重新输入${NC}"
             switch_provider
@@ -284,11 +288,11 @@ switch_provider(){
 
 select_sing_box_install_option() {
     echo "请选择 sing-box 的安装方式(默认1)："
-    echo "1). 下载安装 sing-box(Latest 版本)"
-    echo "2). 下载安装 sing-box(Beta 版本)"
-
+    echo "${GREEN}1)${NC} 下载安装 sing-box(Latest 版本)"
+    echo "${GREEN}2)${NC} 下载安装 sing-box(Beta 版本)"
+    echo "${GREEN}0)${NC} 退出 "
     local install_option
-    read -p "请选择 [1-2]: " install_option
+    read -p "请选择 [0-2]: " install_option
     install_option="${install_option:-1}"
 
     case $install_option in
@@ -299,7 +303,11 @@ select_sing_box_install_option() {
         2)
             install_Pre_release_sing_box
             exit 0
-            ;;                
+            ;;
+        0)
+            menu
+            exit 0
+            ;;            
         *)
             echo -e "${RED}无效的选择,请重新输入！${NC}"
             select_sing_box_install_option
@@ -408,13 +416,13 @@ check_install_type() {
 
 acme_cert_manage() {
     [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]] && yellow "未安装acme.sh" && exit 1
-    echo -e " ${GREEN}1.${NC} 查看/撤销/删除已申请的证书"
-    echo -e " ${GREEN}2.${NC} 手动续期已申请的证书"
-    echo -e " ${GREEN}3.${NC} 切换证书颁发机构"
-    echo -e " ${RED}4. 卸载acme.sh${NC}"
-
+    echo -e "${GREEN}1)${NC} 查看/撤销/删除已申请的证书"
+    echo -e "${GREEN}2${NC} 手动续期已申请的证书"
+    echo -e "${GREEN}3)${NC} 切换证书颁发机构"
+    echo -e "${RED}4) 卸载acme.sh${NC}"
+    echo -e "${GREEN}0) 退出"
     local choice
-    read -p "请输入选项 [1-4]: " choice
+    read -p "请输入选项 [0-4]: " choice
     case "$choice" in
         1)
             revoke_cert
@@ -430,6 +438,10 @@ acme_cert_manage() {
             ;;
         4)
             uninstall_acme
+            exit 0
+            ;;
+        0)
+            menu
             exit 0
             ;;
         *)
@@ -532,19 +544,16 @@ menu() {
     echo -e "${YELLOW}script-version v1.4${NC}"
     show_sing_box_version
     echo "---------------------------------------------------------------"
-    echo -e " ${GREEN}1.${NC} 安装/更新sing-box"
-    echo -e " ${GREEN}2.${NC} acme申请证书"
-    echo -e " ${GREEN}3.${NC} acme证书管理"
-    echo -e " ${GREEN}4.${NC} 自签证书"
-    echo -e " ${RED}5. 卸载sing-box${NC}"
-    echo -e " ${GREEN}6.${NC} 更新脚本"
-    echo -e " ${GREEN}0.${NC} 退出脚本"
+    echo -e "${GREEN}1)${NC} 安装/更新sing-box"
+    echo -e "${GREEN}2)${NC} acme申请证书"
+    echo -e "${GREEN}3)${NC} acme证书管理"
+    echo -e "${GREEN}4)${NC} 自签证书"
+    echo -e "${RED}5) 卸载sing-box${NC}"
+    echo -e "${GREEN}6)${NC} 更新脚本"
+    echo -e "${GREEN}0)${NC} 退出脚本"
     echo "---------------------------------------------------------------"
     read -rp "请输入选项 [0-6]: " menuInput
     case "$menuInput" in
-        0)
-            exit 0
-            ;;
         1)
             select_sing_box_install_option
             exit 0
@@ -567,6 +576,9 @@ menu() {
             ;;
         6)
             update_script
+            exit 0
+            ;;
+        0)
             exit 0
             ;;
         *) 
