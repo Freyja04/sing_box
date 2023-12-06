@@ -493,8 +493,8 @@ uninstall_sing_box() {
 }
 
 update_script() {
-    wget -O /root/singbox.sh https://raw.githubusercontent.com/sleeple2s/sing_box/main/sing_box.sh
-    chmod +x /root/singbox.sh 
+    wget -O /root/sb.sh https://raw.githubusercontent.com/sleeple2s/sing_box/main/sing_box.sh
+    chmod +x /root/sb.sh 
 }
 
 show_sing_box_version() {
