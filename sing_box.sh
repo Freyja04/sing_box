@@ -265,15 +265,15 @@ switch_provider(){
     case $provider in
         1)
             bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && green "切换证书提供商为 Letsencrypt.org 成功！"
-            break
+            exit 0
             ;;
         2)
             bash ~/.acme.sh/acme.sh --set-default-ca --server buypass && green "切换证书提供商为 BuyPass.com 成功！"
-            break
+            exit 0
             ;;
         3)
             bash ~/.acme.sh/acme.sh --set-default-ca --server zerossl && green "切换证书提供商为 ZeroSSL.com 成功！"
-            break
+            exit 0
             ;;
         *)
             echo -e "${RED}无效的选择，请重新输入。${NC}"
@@ -296,11 +296,11 @@ select_sing_box_install_option() {
     case $install_option in
         1)
             install_latest_sing_box
-            break
+            exit 0
             ;;
         2)
             install_Pre_release_sing_box
-            break
+            exit 0
             ;;                
         *)
             echo -e "${RED}无效的选择,请重新输入！${NC}"
@@ -318,11 +318,9 @@ install_latest_sing_box() {
     case $arch in
         x86_64|amd64)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-amd64.tar.gz")
-            break
             ;;
         armv7l)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-armv7.tar.gz")
-            break
             ;;
         aarch64|arm64)
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-arm64.tar.gz")
@@ -364,23 +362,18 @@ install_Pre_release_sing_box() {
     case $arch in
         x86_64|amd64)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-amd64.tar.gz")) | .browser_download_url' | head -n 1)
-            break
             ;;
         armv7l)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-armv7.tar.gz")) | .browser_download_url' | head -n 1)
-            break
             ;;
         aarch64|arm64)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-arm64.tar.gz")) | .browser_download_url' | head -n 1)
-            break
             ;;
         amd64v3)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-amd64v3.tar.gz")) | .browser_download_url' | head -n 1)
-            break
             ;;
         s390x)
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-s390x.tar.gz")) | .browser_download_url' | head -n 1)
-            break
             ;;            
         *)
             echo -e "${RED}不支持的架构：$arch${NC}"
@@ -420,19 +413,19 @@ acme_cert_manage() {
     case "$choice" in
         1)
             revoke_cert
-            break
+            exit 0
             ;;
         2)
             renew_cert
-            break
+            exit 0
             ;;
         3)
             switch_provider
-            break
+            exit 0
             ;;
         4)
             uninstall_acme
-            break
+            exit 0
             ;;
         *)
             echo -e "${RED}无效的选择,请重新输入！${NC}"
