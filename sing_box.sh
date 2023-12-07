@@ -306,77 +306,101 @@ install_acme(){
     source ~/.bashrc
     bash ~/.acme.sh/acme.sh --upgrade --auto-upgrade
     
-    switch_provider
+    # switch_provider
 
     if [[ -n $(~/.acme.sh/acme.sh -v 2>/dev/null) ]]; then
         green "acme.sh 证书一键申请脚本安装成功!"
     else
-        red "抱歉, acme.sh 证书一键申请脚本安装失败"
+        red "acme.sh 证书一键申请脚本安装失败"
     fi
 }
 
-acme_standalone(){
-    check_80
-    WARPv4Status=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
-    WARPv6Status=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
-    if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
-        systemctl stop warp-go >/dev/null 2>&1
-    fi
+# acme_standalone(){
     
+#     check_80_port
+
+#     WARPv4Status=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+#     WARPv6Status=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+#     if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
+#         wg-quick down wgcf >/dev/null 2>&1
+#         systemctl stop warp-go >/dev/null 2>&1
+#     fi
+    
+#     check_ip
+    
+#     echo ""
+#     yellow "使用80端口申请模式时, 请先将您的域名解析至你的VPS的真实IP地址并关闭小黄云, 否则会导致证书申请失败"
+#     echo ""
+#     if [[ -n $ipv4 && -n $ipv6 ]]; then
+#         echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${NC}"
+#         echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${NC}"
+#     elif [[ -n $ipv4 && -z $ipv6 ]]; then
+#         echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${NC}"
+#     elif [[ -z $ipv4 && -n $ipv6 ]]; then
+#         echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${NC}"
+#     fi
+#     echo ""
+
+#     read -rp "请输入解析完成的域名: " domain
+#     [[ -z $domain ]] && red "未输入域名,无法执行操作！" && exit 1
+#     green "已输入的域名：$domain" && sleep 1
+
+#     domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
+    
+#     if [[ $domainIP == $ipv6 ]]; then
+#         bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --listen-v6 --insecure
+#     fi
+#     if [[ $domainIP == $ipv4 ]]; then
+#         bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --insecure
+#     fi
+    
+#     if [[ -n $(echo $domainIP | grep nginx) ]]; then
+#         if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+#             wg-quick up wgcf >/dev/null 2>&1
+#         fi
+#         if [[ -a "/opt/warp-go/warp-go" ]]; then
+#             systemctl start warp-go 
+#         fi
+#         yellow "域名解析失败, 请检查域名是否正确填写或等待解析完成再执行脚本"
+#         exit 1
+#     elif [[ -n $(echo $domainIP | grep ":") || -n $(echo $domainIP | grep ".") ]]; then
+#         if [[ $domainIP != $ipv4 ]] && [[ $domainIP != $ipv6 ]]; then
+#             if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+#                 wg-quick up wgcf >/dev/null 2>&1
+#             fi
+#             if [[ -a "/opt/warp-go/warp-go" ]]; then
+#                 systemctl start warp-go 
+#             fi
+#             green "域名 ${domain} 目前解析的IP: ($domainIP)"
+#             red "当前域名解析的 IP 与当前 VPS 使用的真实IP不匹配"
+#             exit 1
+#         fi
+#     fi
+    
+#     bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file /usr/local/etc/acme/$domain.key --fullchain-file /usr/local/etc/acme/$domain.crt --ecc
+    
+#     apply_cert
+# }
+
+acme_standalone(){
+    #检查/释放80端口
+    check_80_port
+
+    #检查/关闭warp
+    check_warp
+    
+    #检查本机ip
     check_ip
     
-    echo ""
-    yellow "使用80端口申请模式时, 请先将您的域名解析至你的VPS的真实IP地址并关闭小黄云, 否则会导致证书申请失败"
-    echo ""
-    if [[ -n $ipv4 && -n $ipv6 ]]; then
-        echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${NC}"
-        echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${NC}"
-    elif [[ -n $ipv4 && -z $ipv6 ]]; then
-        echo -e "VPS的真实IPv4地址为: ${GREEN}$ipv4${NC}"
-    elif [[ -z $ipv4 && -n $ipv6 ]]; then
-        echo -e "VPS的真实IPv6地址为: ${GREEN}$ipv6${NC}"
-    fi
-    echo ""
+    #检查域名解析ip与本机ip是否一致
+    check_domain
 
-    read -rp "请输入解析完成的域名: " domain
-    [[ -z $domain ]] && red "未输入域名,无法执行操作！" && exit 1
-    green "已输入的域名：$domain" && sleep 1
-
-    domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
+    #设置证书存储路径
+    cert_path="/usr/local/etc/acme" 
+    bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file $cert_path/$domain.key --fullchain-file $ert_path/$domain.crt --ecc
     
-    if [[ $domainIP == $ipv6 ]]; then
-        bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --listen-v6 --insecure
-    fi
-    if [[ $domainIP == $ipv4 ]]; then
-        bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --insecure
-    fi
-    
-    if [[ -n $(echo $domainIP | grep nginx) ]]; then
-        if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-            wg-quick up wgcf >/dev/null 2>&1
-        fi
-        if [[ -a "/opt/warp-go/warp-go" ]]; then
-            systemctl start warp-go 
-        fi
-        yellow "域名解析失败, 请检查域名是否正确填写或等待解析完成再执行脚本"
-        exit 1
-    elif [[ -n $(echo $domainIP | grep ":") || -n $(echo $domainIP | grep ".") ]]; then
-        if [[ $domainIP != $ipv4 ]] && [[ $domainIP != $ipv6 ]]; then
-            if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-                wg-quick up wgcf >/dev/null 2>&1
-            fi
-            if [[ -a "/opt/warp-go/warp-go" ]]; then
-                systemctl start warp-go 
-            fi
-            green "域名 ${domain} 目前解析的IP: ($domainIP)"
-            red "当前域名解析的 IP 与当前 VPS 使用的真实IP不匹配"
-            exit 1
-        fi
-    fi
-    
-    bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file /usr/local/etc/acme/$domain.key --fullchain-file /usr/local/etc/acme/$domain.crt --ecc
-    checktls
+    #申请证书并记录到ca.log
+    apply_cert
 }
 
 revoke_cert() {
@@ -438,7 +462,7 @@ switch_provider(){
 uninstall_acme() {
     read -p "确定要删除 acme.sh 吗？(y/n,默认n) " answer
     answer="${answer:-n}"
-    if [ "$answer" == "y" ]; then
+    if [[ "$answer" == "y" ]]; then
         ~/.acme.sh/acme.sh --uninstall
         sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
         rm -rf ~/.acme.sh
@@ -448,7 +472,7 @@ uninstall_acme() {
     fi
 }
 
-check_80(){
+check_80_port(){
     if [[ -z $(type -P lsof) ]]; then
         if [[ ! $SYSTEM == "CentOS" ]]; then
             ${PACKAGE_UPDATE[int]}
@@ -457,11 +481,12 @@ check_80(){
     fi
     
     yellow "正在检测 80 端口是否占用..."
-    sleep 1
+    # sleep 1
     
     if [[  $(lsof -i:"80" | grep -i -c "listen") -eq 0 ]]; then
         green "检测到目前 80 端口未被占用"
-        sleep 1
+        yellow "使用80端口申请证书时, 请先将您的域名解析至你的VPS的真实IP地址并关闭小黄云, 否则会导致证书申请失败"
+        # sleep 1
     else
         red "检测到目前 80 端口被其他程序被占用,以下为占用程序信息"
         lsof -i:"80"
@@ -469,74 +494,90 @@ check_80(){
         if [[ $yn =~ "Y"|"y" ]]; then
             lsof -i:"80" | awk '{print $2}' | grep -v "PID" | xargs kill -9
             sleep 1
+            check_80_port
         else
             exit 1
         fi
     fi
 }
 
+check_warp() {
+    WARPv4Status=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+    WARPv6Status=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+    if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
+        read -p "检测到warp已开启,将影响acme.sh成功申请证书,是否关闭warp?(y/n,默认y)" chioce
+        chioce="${chioce:-y}"
+        if [[ "$chioce" == "y" ]]; then
+            warp o
+        else
+            exit 0
+    fi
+}
+
 check_ip(){
     ipv4=$(curl -s4m8 ip.sb -k | sed -n 1p)
     ipv6=$(curl -s6m8 ip.sb -k | sed -n 1p)
+    [[ "$ipv4" ]] && yellow "服务器ipv4为: ${ipv4}"
+    [[ "$ipv6" ]] && yellow "服务器ipv6为: ${ipv6}"
 }
 
-checktls() {
-    local cert_path="/usr/local/etc/acme" 
-    if [[ -f /usr/local/etc/acme/$domain.crt && -f /usr/local/etc/acme/$domain.key ]]; then
-        if [[ -s /usr/local/etc/acme/$domain.crt && -s /usr/local/etc/acme/$domain.key ]]; then
-            if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-                wg-quick up wgcf >/dev/null 2>&1
-            fi
-            if [[ -a "/opt/warp-go/warp-go" ]]; then
-                systemctl start warp-go 
-            fi
+check_domain() {
+    read -rp "请输入解析完成的域名: " domain
+    [[ -z $domain ]] && red "未输入域名,无法执行操作！" && exit 1
+    green "已输入的域名：$domain"
+    # green "已输入的域名：$domain" && sleep 1
 
-            echo $domain > /usr/local/etc/acme/ca.log
-            sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
-            echo "0 0 * * * root bash /root/.acme.sh/acme.sh --cron -f >/dev/null 2>&1" >> /etc/crontab
-            echo "证书申请成功!"
-            yellow "crt文件路径: $cert_path/$domain.crt"
-            yellow "key文件路径: $cert_path/$domain.key"
-        else
-            if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-                wg-quick up wgcf >/dev/null 2>&1
-            fi
-            if [[ -a "/opt/warp-go/warp-go" ]]; then
-                systemctl start warp-go 
-            fi
+    domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
+    
+    if [[ $domainIP == $ipv6 ]]; then
+        bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --listen-v6 --insecure
+    elif [[ $domainIP == $ipv4 ]]; then
+        bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --insecure
+    else
+        red "域名未完成解析或域名解析的IP与服务器当前的真实IP不匹配"
+        exit 1
+    fi
+}
 
-            red "证书申请失败"
-            green "建议如下: "
-            yellow "1. 自行检测防火墙是否打开, 如使用 80 端口申请模式时, 请关闭防火墙或放行 80 端口并检测是否关闭小黄云"
-            yellow "2. 同一域名多次申请可能会触发 Let's Encrypt 官方风控, 请尝试使用脚本菜单的 9 选项更换证书颁发机构, 再重试申请证书, 或更换域名、或等待 7 天后再尝试执行脚本"
-        fi
+apply_cert() {
+    cert_path="/usr/local/etc/acme" 
+    if [[ -f $cert_path/$domain.crt && -f $cert_path/$domain.key && -s $cert_path/$domain.crt && -s $cert_path/$domain.key ]]; then
+        echo $domain > $cert_path/ca.log
+        sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
+        echo "0 0 * * * root bash /root/.acme.sh/acme.sh --cron -f >/dev/null 2>&1" >> /etc/crontab
+        echo "证书申请成功!"
+        yellow "crt文件路径: $cert_path/$domain.crt"
+        yellow "key文件路径: $cert_path/$domain.key"
+    else
+        red "证书申请失败"
+        exit 1        
     fi
 }
 
 #自签证书
 self_sign_cert() {
-    read -p "请输入要签证的域名 (例如: example.com): " DOMAIN_NAME
-    if [ -z "$DOMAIN_NAME" ]; then
+    read -p "请输入要签证的域名 (例如: example.com): " domain
+    if [ -z "$domain" ]; then
         echo "错误：域名不能为空"
         exit 1
     fi
-    CERT_PATH=""
-    while [ -z "$CERT_PATH" ] || [ ! -d "$CERT_PATH" ]; do
-        read -p "请输入证书保存路径(必须为已存在的目录,按回车键确认,默认路径为 /usr/local/etc/cert): " CERT_PATH
-        if [ -z "$CERT_PATH" ]; then
+    cert_path=""
+    while [ -z "$cert_path" ] || [ ! -d "$cert_path" ]; do
+        read -rp "请输入证书保存路径(必须为已存在的目录,按回车键确认,默认路径为 /usr/local/etc/cert): " cert_path
+        if [ -z "$cert_path" ]; then
             mkdir -p /usr/local/etc/cert
-            CERT_PATH="/usr/local/etc/cert"
+            cert_path="/usr/local/etc/cert"
         fi
-        if [ ! -d "$CERT_PATH" ]; then
-            echo "错误：指定的路径 '$CERT_PATH' 不存在,请重新输入"
+        if [ ! -d "$cert_path" ]; then
+            echo "错误：指定的路径 '$cert_path' 不存在,请重新输入"
         fi
     done
-    openssl ecparam -genkey -name prime256v1 -out "$CERT_PATH/$DOMAIN_NAME.key"
-    openssl req -new -x509 -days 3650 -key "$CERT_PATH/$DOMAIN_NAME.key" -out "$CERT_PATH/$DOMAIN_NAME.crt" -subj "/CN=$DOMAIN_NAME"
+    openssl ecparam -genkey -name prime256v1 -out "$cert_path/$domain.key"
+    openssl req -new -x509 -days 3650 -key "$cert_path/$domain.key" -out "$cert_path/$domain.crt" -subj "/CN=$domain"
 
     echo "SSL证书和私钥已生成!"
-    yellow "crt文件路径: $CERT_PATH/$DOMAIN_NAME.crt"
-    yellow "key文件路径: $CERT_PATH/$DOMAIN_NAME.key"
+    yellow "crt文件路径: $cert_path/$domain.crt"
+    yellow "key文件路径: $cert_path/$domain.key"
 }
 
 #更新脚本
@@ -578,7 +619,7 @@ show_sing_box_version() {
 
 menu() {
     echo ""
-    echo -e "${YELLOW}script-version v1.5${NC}"
+    echo -e "${YELLOW}script-version v1.51${NC}"
     show_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
