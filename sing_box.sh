@@ -511,6 +511,9 @@ check_warp() {
             warp o
         else
             exit 0
+        fi
+    else
+        exit 0
     fi
 }
 
@@ -619,7 +622,7 @@ show_sing_box_version() {
 
 menu() {
     echo ""
-    echo -e "${YELLOW}script-version v1.51${NC}"
+    echo -e "${YELLOW}script-version v1.52${NC}"
     show_sing_box_version
     echo "---------------------------------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
