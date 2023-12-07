@@ -157,10 +157,56 @@ checktls() {
 }
 
 acme_cert_apply() {
-  local acme_folder="/usr/local/etc/acme"      
-  [[ ! -d "$acme_folder" ]] && mkdir -p "$acme_folder"
-  [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]] && install_acme
-  acme_standalone
+    if [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]]; then
+        read -p "acme.sh尚未安装,是否现在安装？(y/n,默认y) " answer
+        answer="${answer:-y}"
+        if [ "$answer" == "y" || "$answer" == "Y" ]; then
+            local acme_folder="/usr/local/etc/acme"
+            mkdir -p "$acme_folder"
+            install_acme
+            acme_cert_apply
+        else
+            exit 1
+        fi
+    else
+        echo ""
+        echo -e "${GREEN}1 ${NC} 申请新证书"
+        echo -e "${GREEN}2 ${NC} 查看/撤销/删除已申请的证书"
+        echo -e "${GREEN}3 ${NC} 手动续期已申请的证书"
+        echo -e "${GREEN}4 ${NC} 切换证书颁发机构"
+        echo -e "${RED}5  卸载acme.sh${NC}"
+        echo -e "${GREEN}0 ${NC} 退出"
+
+        read -p "acme.sh已安装,选择执行选项[0-5]" chioce
+        chioce="${chioce:-0}"
+
+        case $chioce in
+            1)
+                acme_standalone
+                exit 0
+                ;;
+            2)
+                revoke_cert
+                exit 0
+                ;;
+            3)
+                renew_cert
+                exit 0
+                ;;
+            4)
+                uninstall_acme
+                exit 0
+                ;;
+            5)
+                menu
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}无效的选择,请重新输入！${NC}"
+                acme_cert_apply
+                ;;
+        esac
+    fi
 }
 
 acme_standalone(){
@@ -261,7 +307,7 @@ switch_provider(){
     echo -e "${GREEN}2 ${NC} BuyPass.com"
     echo -e "${GREEN}3 ${NC} ZeroSSL.com"
     echo -e "${GREEN}0 ${NC} 退出"
-    local provider
+
     read -p "请选择证书提供商 [0-3]: " provider
     case $provider in
         1)
@@ -293,10 +339,9 @@ select_sing_box_install_option() {
     echo -e "${GREEN}1 ${NC} 下载安装 sing-box(Latest 版本)"
     echo -e "${GREEN}2 ${NC} 下载安装 sing-box(Beta 版本)"
     echo -e "${GREEN}0 ${NC} 退出 "
-    local install_option
+
     read -p "请选择 [0-2]: " install_option
     install_option="${install_option:-1}"
-
     case $install_option in
         1)
             install_latest_sing_box
@@ -416,44 +461,6 @@ check_install_type() {
     fi
 }
 
-acme_cert_manage() {
-    [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]] && yellow "未安装acme.sh" && exit 1
-    echo ""
-    echo -e "${GREEN}1 ${NC} 查看/撤销/删除已申请的证书"
-    echo -e "${GREEN}2 ${NC} 手动续期已申请的证书"
-    echo -e "${GREEN}3 ${NC} 切换证书颁发机构"
-    echo -e "${RED}4  卸载acme.sh${NC}"
-    echo -e "${GREEN}0 ${NC} 退出"
-    local choice
-    read -p "请输入选项 [0-4]: " choice
-    case "$choice" in
-        1)
-            revoke_cert
-            exit 0
-            ;;
-        2)
-            renew_cert
-            exit 0
-            ;;
-        3)
-            switch_provider
-            exit 0
-            ;;
-        4)
-            uninstall_acme
-            exit 0
-            ;;
-        0)
-            menu
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}无效的选择,请重新输入！${NC}"
-            acme_cert_manage
-            ;;
-    esac
-}
-
 self_sign_cert() {
     read -p "请输入要签证的域名 (例如: example.com): " DOMAIN_NAME
     if [ -z "$DOMAIN_NAME" ]; then
@@ -482,7 +489,7 @@ self_sign_cert() {
 uninstall_sing_box() {
     read -p "确定要删除 sing-box 吗？(y/n,默认n) " answer
     answer="${answer:-n}"
-    if [ "$answer" == "y" ]; then
+    if [ "$answer" == "y" || "$answer" == "Y" ]; then
         echo "开始卸载 sing-box..."
         systemctl disable sing-box
         rm -rf /usr/local/bin/sing-box
@@ -571,10 +578,9 @@ menu() {
     echo "---------------------------------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
     echo -e "${GREEN}2 ${NC} 安装/管理warp"
-    echo -e "${GREEN}3 ${NC} acme证书申请"
-    echo -e "${GREEN}4 ${NC} acme证书管理"
-    echo -e "${GREEN}5 ${NC} 自签证书"
-    echo -e "${GREEN}6 ${NC} 更新脚本"
+    echo -e "${GREEN}3 ${NC} 申请/管理证书(acme.sh)"
+    echo -e "${GREEN}4 ${NC} 自签证书"
+    echo -e "${GREEN}5 ${NC} 更新脚本"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
     echo "---------------------------------------------------------------"
@@ -593,15 +599,11 @@ menu() {
             exit 0
             ;;
         4)
-            acme_cert_manage
-            exit 0
-            ;;
-        5)
             self_sign_cert
             exit 0
             ;;
 
-        6)
+        5)
             update_script
             exit 0
             ;;
