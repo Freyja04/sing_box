@@ -160,7 +160,7 @@ acme_cert_apply() {
     if [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]]; then
         read -p "acme.sh尚未安装,是否现在安装？(y/n,默认y) " answer
         answer="${answer:-y}"
-        if [ "$answer" == "y" || "$answer" == "Y" ]; then
+        if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
             local acme_folder="/usr/local/etc/acme"
             mkdir -p "$acme_folder"
             install_acme
