@@ -177,7 +177,7 @@ acme_cert_apply() {
         echo -e "${RED}5  卸载acme.sh${NC}"
         echo -e "${GREEN}0 ${NC} 退出"
 
-        read -p "acme.sh已安装,选择执行选项[0-5]" chioce
+        read -p "acme.sh已安装,选择执行选项[0-5]:" chioce
         chioce="${chioce:-0}"
 
         case $chioce in
@@ -194,11 +194,14 @@ acme_cert_apply() {
                 exit 0
                 ;;
             4)
-                uninstall_acme
+                switch_provider
                 exit 0
                 ;;
             5)
-                menu
+                uninstall_acme
+                exit 0
+                ;;
+            0)
                 exit 0
                 ;;
             *)
@@ -335,7 +338,7 @@ switch_provider(){
 
 select_sing_box_install_option() {
     echo ""
-    echo "请选择 sing-box 的安装版本(默认1)："
+    echo "请选择 sing-box 的安装版本(默认1)： "
     echo -e "${GREEN}1 ${NC} 下载安装 sing-box(Latest 版本)"
     echo -e "${GREEN}2 ${NC} 下载安装 sing-box(Beta 版本)"
     echo -e "${GREEN}0 ${NC} 退出 "
