@@ -235,16 +235,23 @@ acme_cert_apply() {
             exit 1
         fi
     else
-        echo ""
+        # echo ""
+        # echo -e "${GREEN}1 ${NC} 申请新证书"
+        # echo -e "${GREEN}2 ${NC} 查看/撤销/删除已申请的证书"
+        # echo -e "${GREEN}3 ${NC} 手动续期已申请的证书"
+        # echo -e "${GREEN}4 ${NC} 切换证书颁发机构"
+        # echo -e "${RED}5  卸载acme.sh${NC}"
+        # echo -e "${GREEN}0 ${NC} 退出"
+
+        read -p "acme.sh已安装,选择执行选项[0-5]: " chioce
+        chioce="${chioce:-0}"
+
         echo -e "${GREEN}1 ${NC} 申请新证书"
         echo -e "${GREEN}2 ${NC} 查看/撤销/删除已申请的证书"
         echo -e "${GREEN}3 ${NC} 手动续期已申请的证书"
         echo -e "${GREEN}4 ${NC} 切换证书颁发机构"
         echo -e "${RED}5  卸载acme.sh${NC}"
         echo -e "${GREEN}0 ${NC} 退出"
-
-        read -p "acme.sh已安装,选择执行选项[0-5]: " chioce
-        chioce="${chioce:-0}"
 
         case $chioce in
             1)
@@ -547,17 +554,16 @@ show_sing_box_version() {
     elif [ "$sing_box_status" = "active" ]; then
         sing-box version > "$version_file"
         sed -i '1s/.*/'"$(yellow "$(head -n 1 "$version_file")")"'/g' "$version_file"
-        cat "$version_file"
+        head -n 1 "$version_file"
     else 
         exit 0
     fi
 }
 
 menu() {
-    echo ""
     echo -e "${YELLOW}script-version v1.52${NC}"
     show_sing_box_version
-    echo "---------------------------------------------------------------"
+    echo "------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
     echo -e "${GREEN}2 ${NC} 安装/管理warp"
     echo -e "${GREEN}3 ${NC} 申请/管理证书(acme.sh)"
@@ -565,7 +571,7 @@ menu() {
     echo -e "${GREEN}5 ${NC} 更新脚本"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
-    echo "---------------------------------------------------------------"
+    echo "------------------------------------"
     read -rp "请输入选项: " menuInput
     case "$menuInput" in
         1)
