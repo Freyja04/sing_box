@@ -417,8 +417,8 @@ check_80_port(){
     # sleep 1
     
     if [[  $(lsof -i:"80" | grep -i -c "listen") -eq 0 ]]; then
-        green "检测到目前 80 端口未被占用"
-        yellow "使用80端口申请证书时, 请先将您的域名解析至你的VPS的真实IP地址并关闭小黄云, 否则会导致证书申请失败"
+        green "检测到80端口未被占用"
+        yellow "使用80端口申请证书时, 请先将域名解析至VPS的真实IP地址并关闭小黄云, 否则会导致证书申请失败"
         # sleep 1
     else
         red "检测到目前 80 端口被其他程序被占用,以下为占用程序信息"
@@ -446,7 +446,7 @@ check_warp() {
             exit 0
         fi
     else
-        exit 0
+        green "检测到warp未开启"
     fi
 }
 
