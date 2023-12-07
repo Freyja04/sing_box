@@ -177,7 +177,7 @@ acme_cert_apply() {
         echo -e "${RED}5  卸载acme.sh${NC}"
         echo -e "${GREEN}0 ${NC} 退出"
 
-        read -p "acme.sh已安装,选择执行选项[0-5]:" chioce
+        read -p "acme.sh已安装,选择执行选项[0-5]: " chioce
         chioce="${chioce:-0}"
 
         case $chioce in
@@ -202,6 +202,7 @@ acme_cert_apply() {
                 exit 0
                 ;;
             0)
+                menu
                 exit 0
                 ;;
             *)
