@@ -105,8 +105,8 @@ install_latest_sing_box() {
         tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
-        check_install_type
         green "Sing-Box installed successfully!"
+        check_install_type
     else
         red "Unable to retrieve the download URL for Sing-Box"
         return 1
@@ -146,8 +146,8 @@ install_Pre_release_sing_box() {
         tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
-        check_install_type
         green "Sing-Box installed successfully!"
+        check_install_type
     else
         red "Unable to get pre-release download link for Sing-Box"
         return 1
