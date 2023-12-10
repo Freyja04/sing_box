@@ -45,31 +45,30 @@ done
 select_sing_box_install_option() {
     local install_option
 
-    echo ""
-    yellow "请选择 sing-box 的安装版本(默认1)： "
+    echo "请选择 sing-box 的安装版本(默认1)： "
     echo -e "${GREEN}1 ${NC} 下载安装 sing-box(Latest 版本)"
     echo -e "${GREEN}2 ${NC} 下载安装 sing-box(Beta 版本)"
     echo -e "${GREEN}0 ${NC} 退出 "
-    read -p "选择执行选项: " install_option
-    install_option="${install_option:-1}"
-    case $install_option in
-        1)
-            install_latest_sing_box
-            exit 0
-            ;;
-        2)
-            install_Pre_release_sing_box
-            exit 0
-            ;;
-        0)
-            menu
-            exit 0
-            ;;            
-        *)
-            echo -e " ${RED}无效的选择,请重新输入！${NC} "
-            select_sing_box_install_option
-            ;;
-    esac
+
+    while true; do
+        read -p "选择执行选项: " install_option
+        case $install_option in
+            1|"")
+                install_latest_sing_box
+                break
+                ;;
+            2)
+                install_Pre_release_sing_box
+                break
+                ;;
+            0)
+                break
+                ;;            
+            *)
+                red "无效的选择,请重新输入！${NC}"
+                ;;
+        esac
+    done
 }
 
 install_latest_sing_box() {
@@ -95,21 +94,21 @@ install_latest_sing_box() {
             download_url=$(curl -s $url | grep -o "https://github.com[^\"']*linux-s390x.tar.gz")
             ;;            
         *)
-            echo -e "${RED}不支持的架构：$arch${NC}"
+            red "不支持的架构：$arch "
             return 1
             ;;
     esac
 
-    if [ -n "$download_url" ]; then
+    if [[ -n $download_url ]]; then
         echo "Downloading Sing-Box..."
         wget -qO sing-box.tar.gz "$download_url" 2>&1 >/dev/null
         tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
         check_install_type
-        echo "Sing-Box installed successfully"
+        green "Sing-Box installed successfully!"
     else
-        echo -e "${RED}Unable to retrieve the download URL for Sing-Box${NC}"
+        red "Unable to retrieve the download URL for Sing-Box"
         return 1
     fi
 }
@@ -136,21 +135,21 @@ install_Pre_release_sing_box() {
             download_url=$(curl -s "$url" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.browser_download_url | contains("linux-s390x.tar.gz")) | .browser_download_url' | head -n 1)
             ;;            
         *)
-            echo -e "${RED}不支持的架构：$arch${NC}"
+            red "不支持的架构：$arch"
             return 1
             ;;
     esac
 
-    if [ -n "$download_url" ]; then
+    if [[ -n $download_url ]]; then
         echo "Downloading Sing-Box..."
         wget -qO sing-box.tar.gz "$download_url" 2>&1 >/dev/null
         tar -xzf sing-box.tar.gz -C /usr/local/bin --strip-components=1
         rm sing-box.tar.gz
         chmod +x /usr/local/bin/sing-box
         check_install_type
-        echo "Sing-Box installed successfully"
+        green "Sing-Box installed successfully!"
     else
-        echo -e "${RED}Unable to get pre-release download link for Sing-Box${NC}"
+        red "Unable to get pre-release download link for Sing-Box"
         return 1
     fi
 }
@@ -158,17 +157,19 @@ install_Pre_release_sing_box() {
 check_install_type() {
     local folder="/usr/local/etc/sing-box"
 
-    if [ -d "$folder" ]; then
+    if [[ -d $folder ]]; then
         rm "/usr/local/etc/sing-box/version.txt"
         systemctl daemon-reload   
         systemctl enable sing-box
         systemctl start sing-box
         systemctl restart sing-box
+        get_sing_box_version
     else
         mkdir -p "$folder" && touch "$folder/config.json"
         configure_sing_box_service
         systemctl daemon-reload   
         systemctl enable sing-box
+        get_sing_box_version
     fi
 }
 
@@ -198,7 +199,7 @@ configure_sing_box_service() {
     WantedBy=multi-user.target'
 
     echo "$service_config" >"$service_file"
-    echo "sing-box startup service has been configured"
+    green "sing-box startup service has been configured!"
 }
 
 #安装/管理warp
@@ -207,20 +208,13 @@ install_warp() {
     local choice
     local choic
 
-    if [ -e "$config_file" ]; then
-        read -p "warp 已安装在 $config_file ,进入管理面板？ ( y/n, 默认为 n ): " choice
-        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-            warp
-        else
-            exit 0
-        fi
+    if [[ -e $config_file ]]; then
+        read -p "warp 已安装在 $config_file ,进入管理面板？( y/n, 默认为 n ): " choice
+        [[ $choice == "y" ]] && warp
     else
-        read -p "warp 未安装,现在安装？ ( y/n, 默认为 n): " choic
-        if [[ "$choic" == "y" || "$choic" == "Y" ]]; then
+        read -p "warp 未安装,现在安装？( y/n, 默认为 n): " choic
+        if [[ $choic == "y" ]]; then
             wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
-            echo "warp 已安装在 $config_file "
-        else
-            exit 0
         fi
     fi
 
@@ -232,56 +226,44 @@ acme_cert_apply() {
     local chioce
 
     if [[ -z $(~/.acme.sh/acme.sh -v 2>/dev/null) ]]; then
-        read -p "acme.sh 尚未安装,是否现在安装？( y/n,默认 y ) " answer
+        read -p "acme.sh 尚未安装,是否现在安装？( y/n,默认 y ): " answer
         answer="${answer:-y}"
-        if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-            install_acme
-            acme_cert_apply
-        else
-            exit 1
-        fi
+        [[ $answer == "y" ]] && install_acme && acme_cert_apply
     else
-        echo ""
-        yellow "acme.sh 已安装"
+        green "acme.sh 已安装!"
         echo -e "${GREEN}1 ${NC} 申请新证书"
         echo -e "${GREEN}2 ${NC} 查看/撤销/删除已申请的证书"
         echo -e "${GREEN}3 ${NC} 手动续期已申请的证书"
-        echo -e "${GREEN}4 ${NC} 切换证书颁发机构"
-        echo -e "${RED}5  卸载acme.sh${NC}"
+        echo -e "${RED}4  卸载acme.sh${NC}"
         echo -e "${GREEN}0 ${NC} 退出"
-        read -p "选择执行选项: " chioce
-        chioce="${chioce:-0}"
 
-        case $chioce in
-            1)
-                acme_standalone
-                exit 0
-                ;;
-            2)
-                revoke_cert
-                exit 0
-                ;;
-            3)
-                renew_cert
-                exit 0
-                ;;
-            4)
-                switch_provider
-                exit 0
-                ;;
-            5)
-                uninstall_acme
-                exit 0
-                ;;
-            0)
-                menu
-                exit 0
-                ;;
-            *)
-                echo -e "${RED}无效的选择,请重新输入！${NC}"
-                acme_cert_apply
-                ;;
-        esac
+        while true; do
+            read -p "选择执行选项(默认 0 ): " chioce
+            case $chioce in
+                1)
+                    acme_standalone
+                    break
+                    ;;
+                2)
+                    revoke_cert
+                    break
+                    ;;
+                3)
+                    renew_cert
+                    break
+                    ;;
+                4)
+                    uninstall_acme
+                    break
+                    ;;
+                0|"")
+                    break
+                    ;;
+                *)
+                    red "无效的选择,请重新输入！${NC}"
+                    ;;
+            esac
+        done
     fi
 }
 
@@ -303,11 +285,11 @@ install_acme(){
         systemctl enable cron
     fi
     
-    read -rp "请输入注册邮箱 (例: admin@gmail.com, 或留空自动生成一个 gmail 邮箱): " email
+    read -rp "请输入注册邮箱 (例: admin@gmail.com, 或留空生成随机邮箱): " email
     if [[ -z $email ]]; then
         automail=$(date +%s%N | md5sum | cut -c 1-16)
         email=$automail@gmail.com
-        yellow "已取消设置邮箱, 使用自动生成的 gmail 邮箱: $email"
+        green "已自动生成 gmail 邮箱: $email "
     fi
 
     curl https://get.acme.sh | sh -s email=$email
@@ -317,9 +299,10 @@ install_acme(){
     if [[ -n $(~/.acme.sh/acme.sh -v 2>/dev/null) ]]; then
         #将默认ca切换为letsencrypt
         bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+
         green "acme.sh 证书一键申请脚本安装成功!"
     else
-        red "acme.sh 证书一键申请脚本安装失败"
+        red "acme.sh 证书一键申请脚本安装失败!"
     fi
 }
 
@@ -348,7 +331,7 @@ revoke_cert() {
         rm -rf ~/.acme.sh/${domain}_ecc
         rm -f /usr/local/etc/acme/$domain.crt /usr/local/etc/acme/$domain.key
 
-        green "撤销 ${domain} 的域名证书成功"
+        green "撤销 ${domain} 的域名证书成功!"
     else
         red "未找到 ${domain} 的域名证书, 请检查后重新运行!"
     fi
@@ -360,54 +343,49 @@ renew_cert() {
 
 switch_provider() {
     local provider
-    local current_ca=$(grep DEFAULT_ACME_SERVER /root/.acme.sh/account.conf | awk -F'=' '{print $2}')
 
-    echo ""
-    yellow "设置证书提供商, 默认 Letsencrypt.org "
-    yellow "当前证书提供商: $current_ca"
+    echo "设置证书提供商, 默认 Letsencrypt.org "
     echo -e "${GREEN}1 ${NC} Letsencrypt.org "
     echo -e "${GREEN}2 ${NC} BuyPass.com"
     echo -e "${GREEN}3 ${NC} ZeroSSL.com"
     echo -e "${GREEN}0 ${NC} 退出"
-    read -p "选择执行选项: " provider
-    provider="${provider:-1}"
-    case $provider in
-        1)
-            bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && green "证书提供商已设置为 Letsencrypt.org ！"
-            exit 0
-            ;;
-        2)
-            bash ~/.acme.sh/acme.sh --set-default-ca --server buypass && green "证书提供商已设置为 BuyPass.com ！"
-            exit 0
-            ;;
-        3)
-            bash ~/.acme.sh/acme.sh --set-default-ca --server zerossl && green "证书提供商已设置为 ZeroSSL.com ！"
-            exit 0
-            ;;
-        0)
-            menu
-            exit 0
-            ;;
-        *)
-            echo -e " ${RED}无效的选择,请重新输入${NC} "
-            switch_provider
-            ;;
-    esac
+
+    while true; do
+        read -p "选择执行选项: " provider
+        case $provider in
+            1|"")
+                bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && green "证书提供商已设置为 Letsencrypt.org ！"
+                break
+                ;;
+            2)
+                bash ~/.acme.sh/acme.sh --set-default-ca --server buypass && green "证书提供商已设置为 BuyPass.com ！"
+                break
+                ;;
+            3)
+                bash ~/.acme.sh/acme.sh --set-default-ca --server zerossl && green "证书提供商已设置为 ZeroSSL.com ！"
+                break
+                ;;
+            0)
+                break
+                ;;
+            *)
+                red "无效的选择,请重新输入!"
+                ;;
+        esac
+    done
 }
 
 uninstall_acme() {
     local answer
     local cert_path="/usr/local/etc/acme"
     
-    read -p "确定要删除 acme.sh 吗？( y/n,默认 n ) " answer
+    read -p "确定要删除 acme.sh 吗？( y/n,默认 n )： " answer
     answer="${answer:-n}"
-    if [[ "$answer" == "y" ]]; then
+    if [[ $answer == "y" ]]; then
         ~/.acme.sh/acme.sh --uninstall
         rm -rf ~/.acme.sh
-        [[ -d "$cert_path" ]] && rm -r "$cert_path"
+        [[ -d $cert_path ]] && rm -rf "$cert_path"
         green "acme.sh 证书一键申请脚本已彻底卸载!"
-    else
-        echo "取消卸载操作"
     fi
 }
 
@@ -421,29 +399,28 @@ check_port(){
         ${PACKAGE_INSTALL[int]} lsof
     fi
 
-    read -rp "请输入证书申请端口,默认 80 端口: " port
-    port="${port:-80}"
-    if((port >= 1 && port <= 65535)); then
-        yellow "正在检测 $port 端口是否占用..."
-        if [[  $(lsof -i:"$port" | grep -i -c "listen") -eq 0 ]]; then
-            green "检测到 $port 端口未被占用"
-        else
-            red "检测到目前 $port 端口被其他程序被占用,以下为占用程序信息"
-            lsof -i:"$port"
-            read -rp "是否结束进程,释放端口?( y/n,默认 n ): " choice
-            choice="${choice:-n}"
-            if [[ $choice =~ "Y"|"y" ]]; then
-                lsof -i:"$port" | awk '{print $2}' | grep -v "PID" | xargs kill -9
-                green "$port 端口已释放"
-                # sleep 1
+    while true; do
+        read -rp "请输入证书申请端口,默认 80 端口: " port
+        port="${port:-80}"
+        if((port >= 1 && port <= 65535)); then
+            echo "正在检测 $port 端口是否占用..."
+            if [[ $(lsof -i:$port | grep -i -c "listen") -eq 0 ]]; then
+                green "检测到 $port 端口未被占用."
             else
-                exit 1
+                yellow "检测到目前 $port 端口被其他程序被占用,以下为占用程序信息:"
+                lsof -i:"$port"
+                read -rp "是否结束进程,释放端口?( y/n,默认 n ): " choice
+                choice="${choice:-n}"
+                if [[ $choice =~ "y" ]]; then
+                    lsof -i:"$port" | awk '{print $2}' | grep -v "PID" | xargs kill -9
+                    green "$port 端口已释放!"
+                fi
             fi
+            break
+        else
+            red "输入内容错误,请重新输入!"
         fi
-    else
-        red "输入内容错误,请重新输入"
-        check_port
-    fi
+    done
 }
 
 check_warp() {
@@ -452,32 +429,41 @@ check_warp() {
     local WARPv6Status=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
 
     if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
-        read -p "检测到 warp 已开启,将影响 acme.sh 成功申请证书,是否关闭 warp ?( y/n,默认 y )" chioce
+        read -p "检测到 warp 已开启,将影响 acme.sh 成功申请证书,是否关闭 warp ?( y/n,默认 y )： " chioce
         chioce="${chioce:-y}"
-        if [[ "$chioce" == "y" ]]; then
+        if [[ $chioce == "y" ]]; then
             warp o
-        else
-            exit 0
         fi
     else
-        green "检测到 warp 未开启"
+        green "检测到 warp 未开启."
     fi
 }
 
 apply_cert() {
+    local choice
     local domain
     local domainIP
-
     local cert_path="/usr/local/etc/acme"
-
     local ipv4=$(curl -s4m8 ip.sb -k | sed -n 1p)
     local ipv6=$(curl -s6m8 ip.sb -k | sed -n 1p)
+    local current_ca=$(grep DEFAULT_ACME_SERVER /root/.acme.sh/account.conf | awk -F'=' '{print $2}')
+
     [[ "$ipv4" ]] && yellow "服务器 ipv4 为: ${ipv4}"
     [[ "$ipv6" ]] && yellow "服务器 ipv6 为: ${ipv6}"
 
-    read -rp "请输入解析完成的域名: " domain
-    [[ -z $domain ]] && red "未输入域名,无法执行操作！" && exit 1
-    green "已输入的域名: $domain"
+    read -rp "当前证书提供商: $current_ca ,是否切换?( y/n ,默认 n ): " choice
+    chioce="${chioce:-n}"
+    [[ $chioce == "y" ]] && switch_provider
+
+    while true; do
+        read -rp "请输入解析完成的域名: " domain
+        if [[ -z $domain ]];then
+            red "未输入域名,无法执行操作！"
+        else
+            green "已输入的域名: $domain"
+            break
+        fi
+    done
 
     domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
 
@@ -486,20 +472,20 @@ apply_cert() {
     elif [[ $domainIP == $ipv4 ]]; then
         bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --insecure --httpport ${port}
     else
-        red "域名未完成解析或域名解析的IP与服务器当前IP不匹配"
+        red "域名未完成解析或域名解析的IP与服务器当前IP不匹配."
         exit 1
     fi
     if [[ $? -eq 0 ]]; then
         #安装 $domain 的证书并保存到 $cert_path
-        [[ ! -d "$cert_path" ]] && mkdir -p "$cert_path"
+        [[ ! -d $cert_path ]] && mkdir -p "$cert_path"
         bash ~/.acme.sh/acme.sh --install-cert -d $domain --key-file $cert_path/$domain.key --fullchain-file $cert_path/$domain.crt --ecc
         echo "$domain" > "$cert_path"/ca.log
-        echo "证书申请成功!"
+        green "证书申请成功!"
         yellow "crt 文件路径: "$cert_path"/"$domain".crt"
         yellow "key 文件路径: "$cert_path"/"$domain".key"
         exit 0
     else
-        red "证书申请失败"
+        red "证书申请失败!"
         exit 1
     fi
 }
@@ -508,26 +494,25 @@ apply_cert() {
 self_sign_cert() {
     local domain
     local cert_path
-    read -p "请输入要签证的域名(例如: example.com): " domain
-    if [ -z "$domain" ]; then
-        echo "错误：域名不能为空"
-        exit 1
-    fi
 
-    while [ -z "$cert_path" ] || [ ! -d "$cert_path" ]; do
+    while [[ -z $domain ]]; do
+        read -p "请输入要签证的域名(例如: example.com): " domain
+    done
+
+    while [[ -z $cert_path ]] || [[ ! -d $cert_path ]]; do
         read -rp "请输入证书保存路径(必须为已存在的目录,按回车键确认,默认路径为 /usr/local/etc/cert ): " cert_path
-        if [ -z "$cert_path" ]; then
+        if [[ -z $cert_path ]]; then
             mkdir -p /usr/local/etc/cert
             cert_path="/usr/local/etc/cert"
         fi
-        if [ ! -d "$cert_path" ]; then
-            echo "错误：指定的路径 '$cert_path' 不存在,请重新输入"
+        if [[ ! -d $cert_path ]]; then
+            red "错误：指定的路径 '$cert_path' 不存在,请重新输入!"
         fi
     done
     openssl ecparam -genkey -name prime256v1 -out "$cert_path/$domain.key"
     openssl req -new -x509 -days 3650 -key "$cert_path/$domain.key" -out "$cert_path/$domain.crt" -subj "/CN=$domain"
 
-    echo "SSL证书和私钥已生成!"
+    green "SSL证书和私钥已生成!"
     yellow "crt 文件路径: $cert_path/$domain.crt"
     yellow "key 文件路径: $cert_path/$domain.key"
 }
@@ -544,14 +529,14 @@ uninstall_sing_box() {
 
     read -p "确定要删除 sing-box 吗？( y/n,默认 n ) " answer
     answer="${answer:-n}"
-    if [ "$answer" == "y" || "$answer" == "Y" ]; then
+    if [[ $answer == "y" ]]; then
         echo "开始卸载 sing-box..."
         systemctl disable sing-box
         rm -rf /usr/local/bin/sing-box
         rm -rf /usr/local/etc/sing-box
         rm -rf /etc/systemd/system/sing-box.service
         systemctl daemon-reload
-        echo "sing-box 卸载完成"
+        green "sing-box 卸载完成!"
     else
         echo "取消卸载操作"
     fi
@@ -559,21 +544,22 @@ uninstall_sing_box() {
 
 show_sing_box_version() {
     local version_file="/usr/local/etc/sing-box/version.txt"
-    local sing_box_status=$(systemctl is-active "sing-box")
-
-    if [ -e "$version_file" ]; then
-        cat "$version_file"
-    elif [ "$sing_box_status" = "active" ]; then
-        sing-box version > "$version_file"
-        sed -i '1s/.*/'"$(yellow "$(head -n 1 "$version_file")")"'/g' "$version_file"
+    if [[ -e $version_file ]]; then
         cat "$version_file"
     else 
         yellow "sing-box未安装"
     fi
 }
 
+get_sing_box_version() {
+    local version_file="/usr/local/etc/sing-box/version.txt"
+    [[ ! -e $version_file ]] && touch $version_file
+    sing-box version > "$version_file"
+    sed -i '1s/.*/'"$(yellow "$(head -n 1 "$version_file")")"'/g' "$version_file" && sed -i '/^$/d' "$version_file"
+    cat "$version_file"
+}
+
 menu() {
-    echo ""
     show_sing_box_version
     echo "------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
@@ -615,7 +601,7 @@ menu() {
             exit 0
             ;;
         *) 
-            echo -e "${RED}无效的选择,请重新输入${NC}"
+            red "无效的选择,请重新输入!"
             menu
             ;;
     esac
