@@ -158,18 +158,15 @@ check_install_type() {
     local folder="/usr/local/etc/sing-box"
 
     if [[ -d $folder ]]; then
-        rm "/usr/local/etc/sing-box/version.txt"
         systemctl daemon-reload   
         systemctl enable sing-box
         systemctl start sing-box
         systemctl restart sing-box
-        get_sing_box_version
     else
         mkdir -p "$folder" && touch "$folder/config.json"
         configure_sing_box_service
         systemctl daemon-reload   
         systemctl enable sing-box
-        get_sing_box_version
     fi
 }
 
@@ -542,25 +539,25 @@ uninstall_sing_box() {
     fi
 }
 
-show_sing_box_version() {
-    local version_file="/usr/local/etc/sing-box/version.txt"
-    if [[ -e $version_file ]]; then
-        cat "$version_file"
-    else 
-        yellow "sing-box未安装"
+show_sing_box_info() {
+    local status_output=$(systemctl status sing-box)
+    local version_output=$(sing-box version)
+
+    if [[ $status_output == *Active:\ active* ]]; then
+        green "sing-box status  active"
+    else
+        yellow "sing-box status  not active"
+    fi
+
+    if [ $? -eq 0 ]; then
+        green "$(echo "$version_output" | head -n 1)"
+    else
+        yellow "sing-box version 获取失败,跳过处理."
     fi
 }
 
-get_sing_box_version() {
-    local version_file="/usr/local/etc/sing-box/version.txt"
-    [[ ! -e $version_file ]] && touch $version_file
-    sing-box version > "$version_file"
-    sed -i '1s/.*/'"$(yellow "$(head -n 1 "$version_file")")"'/g' "$version_file" && sed -i '/^$/d' "$version_file"
-    cat "$version_file"
-}
-
 menu() {
-    show_sing_box_version
+    show_sing_box_info
     echo "------------------------------------"
     echo -e "${GREEN}1 ${NC} 安装/更新sing-box"
     echo -e "${GREEN}2 ${NC} 安装/管理warp"
