@@ -521,8 +521,26 @@ update_script() {
 }
 
 open_bbr() {
-    echo "net.core.default_qdisc=fq" | sudo tee -a /etc/sysctl.conf
-    echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.conf
+    CURRENT_DEFAULT_QDISC=$(sysctl -n net.core.default_qdisc)
+    if [ "$CURRENT_DEFAULT_QDISC" != "fq" ]; then
+        echo "net.core.default_qdisc=fq" | sudo tee /etc/sysctl.d/99-custom.conf
+    fi
+    CURRENT_TCP_CONGESTION_CONTROL=$(sysctl -n net.ipv4.tcp_congestion_control)
+    if [ "$CURRENT_TCP_CONGESTION_CONTROL" != "bbr" ]; then
+        echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.d/99-custom.conf
+    else
+        echo "已开启bbr"
+    fi
+    sudo sysctl -p
+}
+
+open_fast_open() {
+    CURRENT_TCP_FASTOPEN=$(sysctl -n net.ipv4.tcp_fastopen)
+    if [ "$CURRENT_TCP_FASTOPEN" != "3" ]; then
+        echo "net.ipv4.tcp_fastopen=3" | sudo tee /etc/sysctl.d/99-custom.conf
+    else
+        echo "tcp_fast_open已开启"
+    fi
     sudo sysctl -p
 }
 
@@ -570,7 +588,8 @@ menu() {
     echo -e "${GREEN}3 ${NC} 申请/管理证书(acme.sh)"
     echo -e "${GREEN}4 ${NC} 自签证书"
     echo -e "${GREEN}5 ${NC} 更新脚本"
-    echo -e "${GREEN}6 ${NC} 开启BBR"
+    echo -e "${GREEN}6 ${NC} 开启bbr"
+    echo -e "${GREEN}7 ${NC} 开启fast-open"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
     echo "------------------------------------"
@@ -599,6 +618,10 @@ menu() {
             ;;
         6)
             open_bbr
+            exit 0
+            ;;
+        7)
+            open_fast_open
             exit 0
             ;;
         10)
