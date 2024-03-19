@@ -520,6 +520,12 @@ update_script() {
     chmod +x /root/sb.sh 
 }
 
+open_bbr() {
+    echo "net.core.default_qdisc=fq" | sudo tee -a /etc/sysctl.conf
+    echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.conf
+    sudo sysctl -p
+}
+
 #卸载sing-box
 uninstall_sing_box() {
     local answer
@@ -564,6 +570,7 @@ menu() {
     echo -e "${GREEN}3 ${NC} 申请/管理证书(acme.sh)"
     echo -e "${GREEN}4 ${NC} 自签证书"
     echo -e "${GREEN}5 ${NC} 更新脚本"
+    echo -e "${GREEN}6 ${NC} 开启BBR"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
     echo "------------------------------------"
@@ -588,6 +595,10 @@ menu() {
 
         5)
             update_script
+            exit 0
+            ;;
+        6)
+            open_bbr
             exit 0
             ;;
         10)
