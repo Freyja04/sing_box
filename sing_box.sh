@@ -523,8 +523,8 @@ update_script() {
 open_bbr() {
     local bbr_status=$(sysctl -n net.ipv4.tcp_congestion_control)
     if [ "$bbr_status" != "bbr" ]; then
-        echo "net.core.default_qdisc=fq" > /etc/sysctl.conf  
-        echo "net.ipv4.tcp_congestion_control=bbr" > /etc/sysctl.conf  
+        echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf  
+        echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf  
         sysctl -p
     else
         green "已开启bbr"
@@ -585,7 +585,7 @@ menu() {
     echo -e "${GREEN}3 ${NC} 申请/管理证书(acme.sh)"
     echo -e "${GREEN}4 ${NC} 自签证书"
     echo -e "${GREEN}5 ${NC} 开启bbr"
-    echo -e "${GREEN}6 ${NC} 开启fast-open"
+    echo -e "${GREEN}6 ${NC} 开启tcp_fastopen"
     echo -e "${GREEN}7 ${NC} 更新脚本"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
