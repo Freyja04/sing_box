@@ -533,11 +533,11 @@ open_bbr() {
 
 open_fast_open() {
     local fastopen_status=$(sysctl -n net.ipv4.tcp_fastopen)
-    if [ "$bbr_status" != "3" ]; then
+    if [ "$fastopen_status" != "3" ]; then
         echo "net.ipv4.tcp_fastopen = 3" | sudo tee -a /etc/sysctl.conf
         sudo sysctl -p
     else
-        green "tcp_fast_open已开启"
+        green "已开启tcp_fast_open"
     fi
 }
 
@@ -584,9 +584,9 @@ menu() {
     echo -e "${GREEN}2 ${NC} 安装/管理warp"
     echo -e "${GREEN}3 ${NC} 申请/管理证书(acme.sh)"
     echo -e "${GREEN}4 ${NC} 自签证书"
-    echo -e "${GREEN}5 ${NC} 更新脚本"
-    echo -e "${GREEN}6 ${NC} 开启bbr"
-    echo -e "${GREEN}7 ${NC} 开启fast-open"
+    echo -e "${GREEN}5 ${NC} 开启bbr"
+    echo -e "${GREEN}6 ${NC} 开启fast-open"
+    echo -e "${GREEN}7 ${NC} 更新脚本"
     echo -e "${RED}10 卸载sing-box${NC}"
     echo -e "${GREEN}0 ${NC} 退出脚本"
     echo "------------------------------------"
@@ -608,17 +608,16 @@ menu() {
             self_sign_cert
             exit 0
             ;;
-
         5)
-            update_script
-            exit 0
-            ;;
-        6)
             open_bbr
             exit 0
             ;;
-        7)
+        6)
             open_fast_open
+            exit 0
+            ;;
+        7)
+            update_script
             exit 0
             ;;
         10)
