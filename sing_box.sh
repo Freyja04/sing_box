@@ -529,7 +529,7 @@ open_bbr() {
     if [ "$CURRENT_TCP_CONGESTION_CONTROL" != "bbr" ]; then
         echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.d/99-custom.conf
     else
-        echo "已开启bbr"
+        green "已开启bbr"
     fi
     sudo sysctl -p
 }
@@ -539,7 +539,7 @@ open_fast_open() {
     if [ "$CURRENT_TCP_FASTOPEN" != "3" ]; then
         echo "net.ipv4.tcp_fastopen=3" | sudo tee /etc/sysctl.d/99-custom.conf
     else
-        echo "tcp_fast_open已开启"
+        green "tcp_fast_open已开启"
     fi
     sudo sysctl -p
 }
