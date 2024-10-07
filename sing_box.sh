@@ -162,6 +162,7 @@ check_install_type() {
         systemctl enable sing-box
         systemctl start sing-box
         systemctl restart sing-box
+        show_sing_box_info
     else
         mkdir -p "$folder" && touch "$folder/config.json"
         configure_sing_box_service
